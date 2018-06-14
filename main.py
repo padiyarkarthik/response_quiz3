@@ -3,7 +3,57 @@ import sqlite3 as sql
 app = Flask(__name__)
 
 import sqlite3
+from sqlite3 import Error
 
+def create_connection(db_file):
+    """ create a database connection to the SQLite database
+        specified by the db_file
+    :param db_file: database file
+    :return: Connection object or None
+    """
+    try:
+        conn = sqlite3.connect(db_file)
+        return conn
+    except Error as e:
+        print(e)
+ 
+    return None
+
+	
+@app.route('/search', methods=['POST'])
+def search():
+
+    if conn:
+        
+        tic = time()
+        count=1
+        while(count<=1000):
+            r = random.uniform(0.6, 6.0)
+            sequel = "select * from edata where mag >= ?"
+            # Note that for security reasons we are preparing the statement first,
+            statement = ibm_db.prepare(conn, sequel)
+            ibm_db.bind_param(statement, 1, r)
+            ibm_db.execute(statement)
+            # obtaining the results
+            res = ibm_db.fetch_assoc(statement)
+            count = count + 1
+        toc = time()
+        totalTime = toc - tic
+        ibm_db.close(conn)
+    return render_template('view2.html', rows=totalTime)
+
+
+
+def main():
+    database = "C:\\Users\Karthik Padiyar\Documents\laptop_hp\Documents\MS_CS_SUMMER_2018\Cloud Computing\assignment3\Assignment3"
+ 
+    # create a database connection
+    conn = create_connection(database)
+
+
+if __name__ == '__main__':
+    main()	
+	
 conn = sqlite3.connect('database.db')
 # print("Opened database successfully")
 
@@ -11,49 +61,6 @@ conn = sqlite3.connect('database.db')
 # print("Table created successfully")
 # conn.close()
 
-
-@app.route('/')
-def home():
-   return render_template('home.html')
-
-@app.route('/enternew')
-def new_student():
-   return render_template('student.html')
-
-@app.route('/addrec',methods = ['POST', 'GET'])
-def addrec():
-   if request.method == 'POST':
-      try:
-         nm = request.form['nm']
-         addr = request.form['add']
-         city = request.form['city']
-         pin = request.form['pin']
-         
-         with sql.connect("database.db") as con:
-            cur = con.cursor()
-            
-            cur.execute("INSERT INTO students (name,addr,city,pin) VALUES (?,?,?,?)",(nm,addr,city,pin) )
-            
-            con.commit()
-            msg = "Record successfully added"
-      except:
-         con.rollback()
-         msg = "error in insert operation"
-      
-      finally:
-         return render_template("result.html",msg = msg)
-         con.close()
-
-@app.route('/list')
-def list():
-   con = sql.connect("database.db")
-   con.row_factory = sql.Row
-   
-   cur = con.cursor()
-   cur.execute("select * from students")
-   
-   rows = cur.fetchall();
-   return render_template("list.html",rows = rows)
 
 if __name__ == '__main__':
    app.run(debug = True)
